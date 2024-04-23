@@ -213,6 +213,7 @@ async def port_scan(plugin, target):
 		return {'type':'port', 'plugin':plugin, 'result':result}
 
 async def service_scan(plugin, service):
+	print('aamine')
 	semaphore = service.target.semiautorecon.service_scan_semaphore
 
 	if not config['force_services']:
@@ -259,6 +260,7 @@ async def service_scan(plugin, service):
 			address = service.target.address
 			addressv6 = service.target.address
 			ipaddress = service.target.ip
+			print(ipaddress)
 			ipaddressv6 = service.target.ip
 			scandir = service.target.scandir
 			protocol = service.protocol
@@ -1254,6 +1256,7 @@ async def run():
 	for target in raw_targets:
 		try:
 			ip = ipaddress.ip_address(target)
+			
 			ip_str = str(ip)
 
 			found = False
