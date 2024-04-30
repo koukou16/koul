@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Nav,
   NavItem,
@@ -14,7 +15,19 @@ import {
 } from "reactstrap";
 
 function Vuln(props) {
-  const [activeTab, setActiveTab] = useState("http");
+  const [activeTab, setActiveTab] = useState("");
+  const [protocolData, setProtocolData] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://127.0.0.1:5000/get_data")
+      .then(response => {
+        setProtocolData(response.data || []);
+        setActiveTab(response.data[0]?.protocol || "");
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération des données :", error);
+      });
+  }, []);
 
   const toggle = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
@@ -23,80 +36,40 @@ function Vuln(props) {
   return (
     <div className="content">
       <Nav tabs>
-        <NavItem>
-          <NavLink
-            className={activeTab === "http" ? "active" : ""}
-            onClick={() => {
-              toggle("http");
-            }}
-          >
-            HTTP
-          </NavLink>
-        </NavItem>
-        <NavItem>
-          <NavLink
-            className={activeTab === "smb" ? "active" : ""}
-            onClick={() => {
-              toggle("smb");
-            }}
-          >
-            SMB
-          </NavLink>
-        </NavItem>
-        <NavItem>
-          <NavLink
-            className={activeTab === "telnet" ? "active" : ""}
-            onClick={() => {
-              toggle("telnet");
-            }}
-          >
-            Telnet
-          </NavLink>
-        </NavItem>
+        {protocolData && protocolData.length > 0 && protocolData.map((data, index) => (
+          <NavItem key={index}>
+            <NavLink
+              className={activeTab === data.protocol ? "active" : ""}
+              onClick={() => toggle(data.protocol)}
+            >
+              {data.protocol ? data.protocol.toUpperCase() : ''}
+            </NavLink>
+          </NavItem>
+        ))}
       </Nav>
       <TabContent activeTab={activeTab}>
-        <TabPane tabId="http">
-          <Row>
-            <Col md="12">
-              <Card>
-                <CardHeader>
-                  <CardTitle tag="h4">HTTP Vulnérabilités</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  {/* Contenu pour HTTP */}
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
-        <TabPane tabId="smb">
-          <Row>
-            <Col md="12">
-              <Card>
-                <CardHeader>
-                  <CardTitle tag="h4">SMB Vulnérabilités</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  {/* Contenu pour SMB */}
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
-        <TabPane tabId="telnet">
-          <Row>
-            <Col md="12">
-              <Card>
-                <CardHeader>
-                  <CardTitle tag="h4">Telnet Vulnérabilités</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  {/* Contenu pour Telnet */}
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
+        {protocolData && protocolData.length > 0 && protocolData.map((data, index) => (
+          <TabPane key={index} tabId={data.protocol}>
+            <Row>
+              <Col md="12">
+                <Card>
+                  <CardHeader>
+                    <CardTitle tag="h4">{data.protocol ? data.protocol.toUpperCase() : ''} Vulnérabilités</CardTitle>
+                  </CardHeader>
+                  <CardBody>
+                    <ul>
+                      {data.vulnerabilities && data.vulnerabilities.length > 0 && data.vulnerabilities.map((vuln, idx) => (
+                        <li key={idx}>
+                          <strong>{vuln.exploitLine}</strong>: {vuln.description} - {vuln.path}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardBody>
+                </Card>
+              </Col>
+            </Row>
+          </TabPane>
+        ))}
       </TabContent>
     </div>
   );

@@ -15,21 +15,14 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import Dashboard from "views/Dashboard.js";
 import Alloutput from "views/Alloutput.js"
 import Icons from "views/Icons.js";
 import Vuln from "views/Vuln"
+import Nmap from "views/Nmap";
 import TableList from "views/TableList.js";
 
 var routes = [
-  {
-    path: "/dashboard",
-    name: "Dashboard",
-    rtlName: "لوحة القيادة",
-    icon: "tim-icons icon-chart-pie-36",
-    component: <Dashboard />,
-    layout: "/admin",
-  },
+ 
   {
     path: "/user",
     name: "User",
@@ -54,6 +47,14 @@ var routes = [
     component: <Vuln />,
     layout: "/admin",
   },
+  {
+    path: "/nmap",
+    name: "nmap",
+    rtlName: "nmap",
+    icon: "tim-icons icon-atom",
+    component: <Nmap />,
+    layout: "/admin",
+  }
  
  
  

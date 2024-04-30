@@ -681,7 +681,7 @@ async def scan_target(target):
 					target.scans['services'][service][plugin_tag] = {'plugin':plugin, 'commands':[]}
 
 				pending.add(asyncio.create_task(service_scan(plugin, service)))
-				
+
 
 			if not service_match:
 				warn('{byellow}[' + target.address + ']{srst} Service ' + service.full_tag() + ' did not match any plugins based on the service name.{rst}', verbosity=2)
@@ -1252,11 +1252,12 @@ async def run():
 		except OSError:
 			error('The target file ' + args.target_file + ' could not be read.')
 			sys.exit(1)
+	ip_list = []
 
 	for target in raw_targets:
 		try:
 			ip = ipaddress.ip_address(target)
-			
+
 			ip_str = str(ip)
 
 			found = False
@@ -1295,6 +1296,7 @@ async def run():
 							continue
 
 						if isinstance(ip, ipaddress.IPv4Address):
+							ip_list.append(ip_str)
 							semiautorecon.pending_targets.append(Target(ip_str, ip_str, 'IPv4', 'ip', semiautorecon))
 						elif isinstance(ip, ipaddress.IPv6Address):
 							semiautorecon.pending_targets.append(Target(ip_str, ip_str, 'IPv6', 'ip', semiautorecon))
@@ -1435,32 +1437,63 @@ async def run():
 				i+=1
 				if i >= num_new_targets:
 					break
-	
+
 	from flask import Flask, send_file, jsonify
 	from flask_cors import CORS
-
 	app = Flask(__name__)
 	CORS(app)  # Active CORS pour toutes les routes de l'application
+	def parse_nmap_file(file_path):
+		results = {}
+		current_service = None
+		with open(file_path, 'r') as file:
+			for line in file:
+				# Chercher la ligne qui commence par un numéro de port
+				port_match = re.match(r'^(\d+)/tcp\s+(open|closed)\s+(\w+)\s+(.*)$', line)
+				if port_match:
+					port, state, service, version = port_match.groups()
+					current_service = service
+					results[current_service] = {'state': state, 'version': version, 'details': ''}
+				elif current_service:
+					# Ajouter les détails de chaque service
+					results[current_service]['details'] += line.rstrip() + '\n'
+		return results
+
+	@app.route('/get_nmap', methods=['GET'])
+	def get_nmap():
+		directory_path = os.path.abspath(f'./results/{ip}/scans/')
+		file_path = os.path.join(directory_path, '_quick_tcp_nmap.txt')
+		print('eeee')
+		if not os.path.exists(file_path):
+			return jsonify([])
+
+		with open(file_path, 'r') as file:
+			content = file.read()
+			nmap_results = parse_nmap_file(file_path)
+		print(nmap_results)
+
+		return jsonify(nmap_results)
+
 
 	@app.route('/get_data', methods=['GET'])
 	def get_data():
 		try:
 			# Chemin absolu du répertoire scans/tcp/
-			directory_path = os.path.abspath(f'./results/{ip}/scans/') 
-			
+			directory_path = os.path.abspath(f'./results/{ip}/scans/')
+
 			# Afficher les dossiers dans le répertoire scans/tcp/
 			folders = [f for f in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, f)) and f.startswith('tcp')]
 			print('Dossiers dans', directory_path, ':', folders)
-			
-			vulnerabilities = []
+
+			protocol_data = []
 
 			# Parcourir les dossiers
 			for folder in folders:
 				folder_path = os.path.join(directory_path, folder)
-				print(folder_path)
 				# Chemin vers le fichier exploit_results.txt dans chaque dossier
 				file_path = os.path.join(folder_path, 'exploit_results.txt')
-				
+
+				vulnerabilities = []
+
 				# Vérifier si le fichier existe
 				if os.path.exists(file_path):
 					with open(file_path, 'r') as file:
@@ -1469,14 +1502,17 @@ async def run():
 							parts = line.strip().split(':')
 							if len(parts) == 3:
 								vulnerabilities.append({
-									'port': folder[3:],  # Exclure "tcp" pour obtenir seulement le numéro de port
 									'exploitLine': parts[0].strip(),
 									'description': parts[1].strip(),
 									'path': parts[2].strip()
 								})
-				print(vulnerabilities)
-			return jsonify(vulnerabilities)
-			
+
+				protocol_data.append({
+					'protocol': folder,
+					'vulnerabilities': vulnerabilities
+				})
+			return jsonify(protocol_data)
+
 		except Exception as e:
 			print(f"Erreur lors de la récupération des données : {e}")
 			return str(e), 500
@@ -1536,6 +1572,6 @@ def main():
 		pass
 
 if __name__ == '__main__':
-	
+
 	main()
-	
+
