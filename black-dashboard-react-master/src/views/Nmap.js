@@ -10,43 +10,44 @@ function Nmap() {
     axios.get("http://127.0.0.1:5000/get_nmap")
       .then(response => {
         setNmapData(response.data);
+        setActiveTab(Object.keys(response.data)[0]); // Set the first IP as active initially
       })
       .catch(error => {
         console.error("Erreur lors de la récupération des données Nmap :", error);
       });
   }, []);
 
-  const toggle = (tab) => {
-    if (activeTab !== tab) setActiveTab(tab);
+  const toggle = (ip) => {
+    setActiveTab(ip);
   };
 
   return (
     <div className="content">
       <Nav tabs>
-        {Object.keys(nmapData).map((service, index) => (
+        {Object.keys(nmapData).map((ip, index) => (
           <NavItem key={index}>
             <NavLink
-              className={activeTab === service ? "active" : ""}
-              onClick={() => toggle(service)}
+              className={activeTab === ip ? "active" : ""}
+              onClick={() => toggle(ip)}
             >
-              {service}
+              {ip}
             </NavLink>
           </NavItem>
         ))}
       </Nav>
       <TabContent activeTab={activeTab}>
-        {Object.keys(nmapData).map((service, index) => (
-          <TabPane key={index} tabId={service}>
+        {Object.keys(nmapData).map((ip, index) => (
+          <TabPane key={index} tabId={ip}>
             <Row>
               <Col md="12">
                 <Card>
                   <CardHeader>
-                    <CardTitle tag="h4">{service.toUpperCase()} Détails</CardTitle>
+                    <CardTitle tag="h4">{ip.toUpperCase()} Détails</CardTitle>
                   </CardHeader>
                   <CardBody>
-                    <p>State: {nmapData[service].state}</p>
-                    <p>Version: {nmapData[service].version}</p>
-                    <p>Details: {nmapData[service].details}</p>
+                    <p>State: {nmapData[ip].state}</p>
+                    <p>Version: {nmapData[ip].version}</p>
+                    <p>Details: {nmapData[ip].details}</p>
                   </CardBody>
                 </Card>
               </Col>

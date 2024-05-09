@@ -1462,7 +1462,6 @@ async def run():
 	def get_nmap():
 		directory_path = os.path.abspath(f'./results/{ip}/scans/')
 		file_path = os.path.join(directory_path, '_quick_tcp_nmap.txt')
-		print('eeee')
 		if not os.path.exists(file_path):
 			return jsonify([])
 
@@ -1472,8 +1471,53 @@ async def run():
 		print(nmap_results)
 
 		return jsonify(nmap_results)
+	RESULTS_DIR = '/home/amine/amine/stage1/ss/SemiAutoRecon/results'
+	def find_txt_files(directory):
+		txt_files = []
+		for root, dirs, files in os.walk(directory):
+			for file in files:
+				if file.endswith('.txt'):
+					txt_files.append(os.path.join(root, file))
+		return txt_files
 
+	@app.route('/scan', methods=['GET'])
+	def get_scannmap():
+		ip_directories = os.listdir(RESULTS_DIR)
+		nmap_results = {}
 
+		for ip_dir in ip_directories:
+			directory_path = os.path.join(RESULTS_DIR, ip_dir, 'scans')
+			file_path = os.path.join(directory_path, '_quick_tcp_nmap.txt')
+			
+			if os.path.exists(file_path):
+				with open(file_path, 'r') as file:
+					for line in file:
+						port_match = re.match(r'^(\d+)/tcp\s+(open|closed)\s+(\w+)\s+(.*)$', line)
+						if port_match:
+							port, state, protocol, version = port_match.groups()
+							if protocol in nmap_results:
+								nmap_results[protocol] += 1
+							else:
+								nmap_results[protocol] = 1
+		print(nmap_results)
+		return jsonify(nmap_results)
+
+	@app.route('/api/scans')
+	def get_scans():
+		ip_directories = os.listdir(RESULTS_DIR)
+		scans_data = []
+		for ip_dir in ip_directories:
+			ip_dir_path = os.path.join(RESULTS_DIR, ip_dir)
+			txt_files = find_txt_files(ip_dir_path)
+			for file_path in txt_files:
+				with open(file_path, 'r') as file:
+					file_data = file.read()
+				scans_data.append({
+					'ip': ip_dir,
+					'fileName': os.path.relpath(file_path, ip_dir_path),  # Adjusting to show path relative to IP folder
+					'content': file_data
+				})
+		return jsonify(scans_data)
 	@app.route('/get_data', methods=['GET'])
 	def get_data():
 		try:

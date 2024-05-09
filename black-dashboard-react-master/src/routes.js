@@ -19,6 +19,7 @@ import Alloutput from "views/Alloutput.js"
 import Icons from "views/Icons.js";
 import Vuln from "views/Vuln"
 import Nmap from "views/Nmap";
+import User from "views/User";
 import TableList from "views/TableList.js";
 
 var routes = [
@@ -28,7 +29,7 @@ var routes = [
     name: "User",
     rtlName: "user",
     icon: "tim-icons icon-chart-pie-36",
-    component: <user/>,
+    component: <User/>,
     layout: "/admin",
   },
   {
