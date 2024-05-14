@@ -1501,6 +1501,24 @@ async def run():
 								nmap_results[protocol] = 1
 		print(nmap_results)
 		return jsonify(nmap_results)
+	@app.route('/compteur')
+	def count_ports():
+		open_ports = 0
+		closed_ports = 0
+		filtered_ports = 0
+		txt_files = find_txt_files(RESULTS_DIR)
+		for txt_file in txt_files:
+			parsed_results = parse_nmap_file(txt_file)
+			for service, info in parsed_results.items():
+				state = info['state']
+				if state == 'open':
+					open_ports += 1
+				elif state == 'closed':
+					closed_ports += 1
+				elif state == 'filtered':
+					filtered_ports += 1
+		print({'open_ports': open_ports, 'closed_ports': closed_ports, 'filtered_ports': filtered_ports})
+		return jsonify({'open_ports': open_ports, 'closed_ports': closed_ports, 'filtered_ports': filtered_ports})
 
 	@app.route('/api/scans')
 	def get_scans():
