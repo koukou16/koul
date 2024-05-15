@@ -213,7 +213,6 @@ async def port_scan(plugin, target):
 		return {'type':'port', 'plugin':plugin, 'result':result}
 
 async def service_scan(plugin, service):
-	print('aamine')
 	semaphore = service.target.semiautorecon.service_scan_semaphore
 
 	if not config['force_services']:
@@ -260,7 +259,6 @@ async def service_scan(plugin, service):
 			address = service.target.address
 			addressv6 = service.target.address
 			ipaddress = service.target.ip
-			print(ipaddress)
 			ipaddressv6 = service.target.ip
 			scandir = service.target.scandir
 			protocol = service.protocol
@@ -276,7 +274,6 @@ async def service_scan(plugin, service):
 			http_scheme = 'https' if 'https' in service.name or service.secure is True else 'http'
 
 			nmap_extra = service.target.semiautorecon.args.nmap
-			print('amine',service.target.semiautorecon.args.nmap_append)
 			if service.target.semiautorecon.args.nmap_append:
 				nmap_extra += ' ' + service.target.semiautorecon.args.nmap_append
 
@@ -681,7 +678,6 @@ async def scan_target(target):
 					target.scans['services'][service][plugin_tag] = {'plugin':plugin, 'commands':[]}
 
 				pending.add(asyncio.create_task(service_scan(plugin, service)))
-
 
 			if not service_match:
 				warn('{byellow}[' + target.address + ']{srst} Service ' + service.full_tag() + ' did not match any plugins based on the service name.{rst}', verbosity=2)
@@ -1252,12 +1248,10 @@ async def run():
 		except OSError:
 			error('The target file ' + args.target_file + ' could not be read.')
 			sys.exit(1)
-	ip_list = []
 
 	for target in raw_targets:
 		try:
 			ip = ipaddress.ip_address(target)
-
 			ip_str = str(ip)
 
 			found = False
@@ -1296,7 +1290,6 @@ async def run():
 							continue
 
 						if isinstance(ip, ipaddress.IPv4Address):
-							ip_list.append(ip_str)
 							semiautorecon.pending_targets.append(Target(ip_str, ip_str, 'IPv4', 'ip', semiautorecon))
 						elif isinstance(ip, ipaddress.IPv6Address):
 							semiautorecon.pending_targets.append(Target(ip_str, ip_str, 'IPv6', 'ip', semiautorecon))
@@ -1438,7 +1431,7 @@ async def run():
 				if i >= num_new_targets:
 					break
 
-	from flask import Flask, send_file, jsonify
+from flask import Flask, send_file, jsonify
 	from flask_cors import CORS
 	app = Flask(__name__)
 	CORS(app)  # Active CORS pour toutes les routes de l'application
@@ -1581,7 +1574,6 @@ async def run():
 
 	# Appel de la fonction run() directement
 	app.run(debug=True)
-
 	# If there's only one target we don't need a combined report
 	if len(semiautorecon.completed_targets) > 1:
 		for plugin in semiautorecon.plugin_types['report']:
@@ -1634,6 +1626,5 @@ def main():
 		pass
 
 if __name__ == '__main__':
-
 	main()
 
