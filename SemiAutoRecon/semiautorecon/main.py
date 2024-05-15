@@ -1464,7 +1464,7 @@ from flask import Flask, send_file, jsonify
 		print(nmap_results)
 
 		return jsonify(nmap_results)
-	RESULTS_DIR = '/home/amine/amine/stage1/ss/SemiAutoRecon/results'
+	RESULTS_DIR = '/home/kali/results'
 	def find_txt_files(directory):
 		txt_files = []
 		for root, dirs, files in os.walk(directory):
